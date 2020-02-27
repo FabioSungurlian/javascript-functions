@@ -8,7 +8,11 @@ function same([x, y], [j, k]) {
 
 // The game state to search for `cell` is passed as the `this` value of the function.
 function contains(cell) {
-  return this.indexOf(cell) != -1;
+
+  if(this.some != undefined){
+    return this.some((el) => same(el, cell));
+  }
+  return false;
 }
 
 const printCell = (cell, state) => {
@@ -21,61 +25,76 @@ const corners = (state = []) => {
     return {topRight: [0, 0], bottomLeft: [0, 0]}
   }
   else {
-    return state.reduce((prev, cur) => {
+    const corners = state.reduce((prev, cur) => {
       const topRight = [
         Math.max(prev.topRight[0], cur[0]),
         Math.max(prev.topRight[1], cur[1])
       ];
 
       const bottomLeft = [
-        Math.min(prev.topRight[0], cur[0]),
-        Math.min(prev.topRight[1], cur[1])
+        Math.min(prev.bottomLeft[0], cur[0]),
+        Math.min(prev.bottomLeft[1], cur[1])
       ];
 
       return {topRight, bottomLeft};
       
     }, minCorners);
+
+    return corners;
   }
 };
 
 const printCells = (state) => {
   const {bottomLeft, topRight} = corners(state);
-  const width = topRight[0] - bottomLeft[0];
-  const height = topRight[1] - bottomLeft[1];
 
   let grid = "";
   for(y = bottomLeft[1]; y <= topRight[1]; y++){
     for(x = bottomLeft[0]; x <= topRight[0]; x++){
-      grid += printCell([x, y])
+      grid += printCell([x, y], state);
+      if(x != topRight[0]){
+        grid += " ";
+      }
     }
-    grid += "\n";
+    if(y != topRight[1]){
+      grid += "\n";
+    }
   }
   console.log(grid);
+  return grid;
 };
 
 const getNeighborsOf = ([x, y]) => {
   
   return [
     [x + 1, y + 1],
-    [x, y + 1]
-    [x - 1, y + 1],
-    [x - 1, y],
     [x + 1, y],
     [x + 1, y - 1],
-    [x + 1, y + 1],
+    [x, y - 1],
+    [x, y + 1],
+    [x - 1, y + 1],
+    [x - 1, y],
     [x - 1, y - 1],
   ]
 };
 
 const getLivingNeighbors = (cell, state) => {
   const neighbors = getNeighborsOf(cell);
-  const livingCells = neighbors.filter(el => contains.bind(state, el));
+  const livingCells = neighbors.filter(el => contains.bind(state, el)());
   return livingCells;
 };
 
 const willBeAlive = (cell, state) => {
-  let livingNeighbors = getLivingNeighbors(cell, state);
-  return (contains.call(state, cell) && livingNeighbors.length > 1) || livingNeighbors.length > 2;
+  const livingNeighbors = getLivingNeighbors(cell, state);
+  const cellWillBeAlive = contains.call(state, cell)? livingNeighbors.length >= 2 : livingNeighbors.length >= 3;
+  if(contains.call(state, cell)){
+    console.table({
+      livingNeighbors, 
+      cellWillBeAlive,
+      cell,
+      state
+    });
+  }
+  return cellWillBeAlive;
 };
 
 const calculateNext = (state) => {
@@ -100,15 +119,16 @@ const iterate = (state, iterations) => {
   for(let i = 0; i < iterations; i++){
     gameStates.push(calculateNext(state));
   }
+  return gameStates;
 };
 
 const main = (pattern, iterations) => {
   const gameStates = iterate(startPatterns.pattern, iterations);
   let output = "";
-  let outputStates = gameStates.forEach((element, i) => {
+  let outputStates = gameStates.forEach((state, i) => {
     printCells(state);
     if(i != gameStates.length - 1){
-      console.log("/n");
+      console.log("\n");
     }
   });
 };
