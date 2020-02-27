@@ -86,14 +86,14 @@ const getLivingNeighbors = (cell, state) => {
 const willBeAlive = (cell, state) => {
   const livingNeighbors = getLivingNeighbors(cell, state);
   const cellWillBeAlive = contains.call(state, cell)? livingNeighbors.length >= 2 : livingNeighbors.length >= 3;
-  if(contains.call(state, cell)){
+  /*if(contains.call(state, cell)){
     console.table({
       livingNeighbors, 
       cellWillBeAlive,
       cell,
       state
     });
-  }
+  }*/
   return cellWillBeAlive;
 };
 
